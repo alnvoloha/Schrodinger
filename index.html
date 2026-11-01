@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Спектры потенциальных ям</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Шесть потенциальных ям на одном экране: уровни, волны, спектры, туннелирование и выбор модели атома.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500&family=Geologica:wght@300;400;500;600;700&family=Noto+Serif:ital,wght@1,400&display=swap">
+<style>
+/* Layout: основная колонка + липкая правая панель-справочник (оглавление, обозначения, как читать графики).
+   Атлас из шести карточек, раскрывается одна. Дальше ответы на вопросы задачи сразу для всех моделей. */
+:root{
+  --bg:#ffffff; --rail:#f4f5f8; --card:#ffffff; --sunk:#f7f8fb;
+  --ink:#16181d; --ink-2:#464b57; --muted:#7a8090; --line:#e4e6ec; --line-2:#cfd3dc;
+  --accent:#5b3fd6; --accent-ink:#ffffff; --accent-soft:#efebff;
+  --wall:#e6e8ee; --forbid:rgba(214,52,66,.11); --forbid-line:#d63442;
+  --yes:#16834a; --no:#cf3a3a; --half:#a36b00;
+  --s1:#2f6fd0; --s2:#e2622c; --s3:#169c6c; --s4:#d18c00; --s5:#cc3f8f; --s6:#5b3fd6;
+  --f-ui:"Geologica","Segoe UI",system-ui,sans-serif;
+  --f-math:"Noto Serif","Cambria","Times New Roman",serif;
+  --f-num:"Fira Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121317; --rail:#191b21; --card:#17191f; --sunk:#1d2027;
+    --ink:#eceef3; --ink-2:#b9bdc9; --muted:#8a90a0; --line:#2a2d36; --line-2:#3a3e4a;
+    --accent:#a690ff; --accent-ink:#16112e; --accent-soft:#251e47;
+    --wall:#262932; --forbid:rgba(240,100,110,.18); --forbid-line:#f07f88;
+    --yes:#4fd189; --no:#ff7b7b; --half:#e9b44c;
+    --s1:#5b9bf0; --s2:#f07a45; --s3:#2fc58d; --s4:#e8aa20; --s5:#e86aae; --s6:#a690ff;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121317; --rail:#191b21; --card:#17191f; --sunk:#1d2027;
+  --ink:#eceef3; --ink-2:#b9bdc9; --muted:#8a90a0; --line:#2a2d36; --line-2:#3a3e4a;
+  --accent:#a690ff; --accent-ink:#16112e; --accent-soft:#251e47;
+  --wall:#262932; --forbid:rgba(240,100,110,.18); --forbid-line:#f07f88;
+  --yes:#4fd189; --no:#ff7b7b; --half:#e9b44c;
+  --s1:#5b9bf0; --s2:#f07a45; --s3:#2fc58d; --s4:#e8aa20; --s5:#e86aae; --s6:#a690ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-weight:400;font-size:16px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 60px}
+.shell{max-width:1220px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:40px}
+@media (max-width:1100px){.shell{grid-template-columns:minmax(0,1fr)}}
+main{min-width:0}
+h1,h2,h3{margin:0;text-wrap:balance;line-height:1.15}
+h1{font-size:clamp(32px,5vw,58px);font-weight:300;letter-spacing:-.035em}
+h1 b{font-weight:700}
+h2{font-size:clamp(22px,2.8vw,30px);font-weight:600;letter-spacing:-.02em}
+h3{font-size:16px;font-weight:600}
+p{margin:0}
+a{color:var(--accent)}
+.m{font-family:var(--f-math);font-style:italic;white-space:nowrap}
+.num{font-family:var(--f-num);font-size:.92em}
+.small{font-size:13.5px;color:var(--muted)}
+button,input{font-family:inherit}
+button:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* header */
+header{padding:48px 0 8px;display:grid;gap:16px}
+.kick{font-size:13.5px;color:var(--muted);font-weight:500}
+.lead{font-size:19px;color:var(--ink-2);max-width:58ch;font-weight:300}
+.answer-line{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:14px 18px;border-radius:12px;background:var(--accent-soft);max-width:760px}
+.answer-line .q{font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+.answer-line p{font-size:17px}
+.answer-line a{font-size:14px;margin-left:auto}
+
+/* sections */
+section{padding-top:64px;scroll-margin-top:16px}
+.head{display:grid;gap:8px;margin-bottom:18px;max-width:70ch}
+.head .q{font-size:13px;font-weight:600;color:var(--accent)}
+.head p{color:var(--ink-2)}
+
+/* rail */
+aside.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);align-self:start;margin-top:48px;background:var(--rail);border-radius:14px;padding:18px;display:grid;gap:18px;max-height:calc(100vh - 32px);overflow:auto}
+@media (max-width:1100px){aside.rail{position:static;max-height:none;margin-top:24px;order:-1}}
+.rail h4{margin:0 0 6px;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.rail nav{display:grid;gap:2px}
+.rail nav a{color:var(--ink-2);text-decoration:none;font-size:14.5px;padding:3px 8px;border-radius:6px}
+.rail nav a:hover{background:var(--card);color:var(--ink)}
+.rail nav a[aria-current="true"]{background:var(--accent);color:var(--accent-ink)}
+.rail dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;font-size:13.5px;color:var(--ink-2)}
+.rail dt{font-family:var(--f-math);font-style:italic;color:var(--ink);white-space:nowrap}
+.rail dd{margin:0}
+.keyrow{display:grid;grid-template-columns:22px minmax(0,1fr);gap:4px 10px;align-items:center;font-size:13.5px;color:var(--ink-2)}
+.k{display:block;height:3px;border-radius:2px}
+.k.box{height:12px;border-radius:3px;background:var(--forbid);box-shadow:inset 0 0 0 1px var(--forbid-line)}
+.k.hatch{height:12px;border-radius:3px;background:repeating-linear-gradient(45deg,var(--forbid-line) 0 1px,var(--wall) 1px 5px)}
+.k.dash{height:0;border-top:1.5px dashed var(--muted)}
+details.railmob{display:none}
+@media (max-width:1100px){
+  .rail .full{display:none}
+  details.railmob{display:block}
+  details.railmob summary{cursor:pointer;font-weight:600;font-size:15px}
+  details.railmob[open] summary{margin-bottom:12px}
+  .rail nav{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+}
+
+/* toolbar */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:14px;background:var(--sunk)}
+.grp{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.grp > span{font-size:13px;color:var(--muted);margin-right:4px}
+.pill{font-size:13.5px;border:1px solid var(--line-2);background:var(--card);color:var(--ink-2);border-radius:999px;padding:4px 11px;cursor:pointer}
+.pill:hover{border-color:var(--accent)}
+.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* atlas: strip of thumbnails + one stage */
+.strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:12px}
+@media (max-width:900px){.strip{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.thumb{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 8px 6px;display:grid;gap:4px;cursor:pointer;text-align:left;color:var(--ink-2);font-size:13px;font-weight:500;min-width:0}
+.thumb:hover{border-color:var(--line-2)}
+.thumb[aria-selected="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);color:var(--ink)}
+.thumb span{display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thumb span i{width:8px;height:8px;border-radius:50%;flex:none}
+.thumb canvas{pointer-events:none}
+.stage{border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:12px;background:var(--card)}
+.stage-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px}
+.stage-h h3{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px}
+.stage-h h3 i{width:11px;height:11px;border-radius:50%}
+.stage-h .fx{font-family:var(--f-math);font-style:italic;font-size:16px;color:var(--ink-2)}
+.stage .toolbar{margin:0}
+/* atlas */
+.atlas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.atlas{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.atlas{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:8px;min-width:0;position:relative}
+.card.open{grid-column:1/-1;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.card-h{display:flex;align-items:flex-start;gap:10px;justify-content:space-between}
+.card-h .t{display:grid;gap:1px;min-width:0}
+.card-h h3{display:flex;align-items:center;gap:8px}
+.card-h h3 i{width:10px;height:10px;border-radius:50%;flex:none}
+.card-h .fx{font-family:var(--f-math);font-style:italic;font-size:14px;color:var(--ink-2)}
+.more-btn{flex:none;font-size:13px;border:1px solid var(--line-2);background:transparent;color:var(--ink-2);border-radius:8px;padding:4px 10px;cursor:pointer}
+.more-btn:hover{border-color:var(--accent);color:var(--accent)}
+.card.open .more-btn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.cv-wrap{position:relative;min-width:0}
+canvas{display:block;width:100%;touch-action:none}
+.detail{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
+@media (max-width:760px){.detail{grid-template-columns:minmax(0,1fr)}}
+.detail .side{display:grid;gap:12px;align-content:start}
+.detail .side p{font-size:14.5px;color:var(--ink-2)}
+.detail .side h4{margin:0;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.slider{display:grid;grid-template-columns:1fr auto;gap:0 8px;font-size:13.5px;color:var(--ink-2)}
+.slider output{font-family:var(--f-num);font-size:13px;color:var(--ink)}
+.slider input{grid-column:1/-1;width:100%;accent-color:var(--accent);margin:4px 0 0}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border-radius:10px;overflow:hidden}
+@media (max-width:760px){.facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fact{background:var(--sunk);padding:10px 12px;display:grid;gap:2px;align-content:start;min-width:0}
+.fact span{font-size:12px;color:var(--muted)}
+.fact b{font-family:var(--f-num);font-weight:500;font-size:17px;line-height:1.3}
+.fact small{font-size:12px;color:var(--muted);line-height:1.4}
+.fact.yes b{color:var(--yes)} .fact.no b{color:var(--no)}
+.bars{display:flex;align-items:flex-end;gap:3px;height:24px;margin-top:2px}
+.bars i{display:block;flex:1;max-width:20px;border-radius:2px 2px 0 0;min-height:2px}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;line-height:1.45;padding:6px 9px;border-radius:8px;white-space:nowrap;transform:translate(-50%,calc(-100% - 12px));z-index:5}
+
+/* figures */
+.fig{border:1px solid var(--line);border-radius:14px;padding:12px;position:relative;background:var(--card)}
+.fig figcaption,.figcap{font-size:13.5px;color:var(--muted);margin-top:8px}
+.takeaways{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+@media (max-width:760px){.takeaways{grid-template-columns:minmax(0,1fr)}}
+.takeaways div{padding:12px 14px;border-left:3px solid var(--line-2);display:grid;gap:3px}
+.takeaways div.hi{border-left-color:var(--accent)}
+.takeaways b{font-weight:600}
+.takeaways p{font-size:14.5px;color:var(--ink-2)}
+
+/* verdict */
+.matrix{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+.matrix table{border-collapse:separate;border-spacing:0;width:100%;font-size:14px}
+.matrix th,.matrix td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+.matrix tr:last-child th,.matrix tr:last-child td{border-bottom:none}
+.matrix thead th{font-weight:600;font-size:13px;color:var(--ink-2);background:var(--sunk)}
+.matrix tbody th{text-align:left;font-weight:500;color:var(--ink-2)}
+.matrix th.mh,.matrix td.mh{background:var(--accent-soft)}
+.c{display:inline-block;min-width:92px;padding:3px 8px;border-radius:6px;font-size:13px;font-weight:500}
+.c.y{background:color-mix(in srgb,var(--yes) 16%,transparent);color:var(--yes)}
+.c.n{background:color-mix(in srgb,var(--no) 14%,transparent);color:var(--no)}
+.c.h{background:color-mix(in srgb,var(--half) 16%,transparent);color:var(--half)}
+.final{margin-top:16px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:20px;align-items:start}
+@media (max-width:760px){.final{grid-template-columns:minmax(0,1fr)}}
+.final .big{font-size:clamp(22px,3vw,30px);font-weight:300;letter-spacing:-.02em;line-height:1.25}
+.final .big b{font-weight:600;color:var(--accent)}
+.final ol{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--ink-2)}
+
+/* method */
+.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:14px}
+@media (max-width:860px){.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.flow{grid-template-columns:minmax(0,1fr)}}
+.flow div{padding:14px;border-right:1px solid var(--line);display:grid;gap:6px;align-content:start;background:var(--card)}
+.flow div:last-child{border-right:none}
+@media (max-width:860px){.flow div{border-bottom:1px solid var(--line)}}
+.flow .n{font-family:var(--f-num);font-size:12px;color:var(--accent)}
+.flow p{font-size:14px;color:var(--ink-2)}
+.flow .m{font-size:15px;color:var(--ink);white-space:normal}
+.mgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media (max-width:760px){.mgrid{grid-template-columns:minmax(0,1fr)}}
+.acc{width:100%;border-collapse:collapse;font-size:14px}
+.acc th{font-size:12.5px;font-weight:600;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line-2)}
+.acc td{padding:8px 10px;border-bottom:1px solid var(--line)}
+.acc tr:last-child td{border-bottom:none}
+.acc td.r{text-align:right;font-family:var(--f-num);font-size:13px;white-space:nowrap}
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;margin-top:12px}
+footer{margin-top:52px;font-size:13px;color:var(--muted)}
+</style>
+
+</head>
+<body>
+<div class="shell">
+<main>
+<header>
+  <p class="kick">Исследовательская работа по физике · 4 курс, мехмат</p>
+  <h1>Спектры <b>потенциальных ям</b></h1>
+  <p class="lead">Электрон в атоме удерживается в «яме» потенциальной энергии. Решаем уравнение Шрёдингера для пяти форм ямы методом конечных разностей и выясняем, какая форма лучше описывает настоящий атом.</p>
+  <div class="answer-line"><span class="q">Ответ</span><p>Ближе всего к атому — <b>потенциал Морзе</b></p><a href="#verdict">почему</a></div>
+</header>
+
+<!-- ================= АТЛАС ================= -->
+<section id="atlas">
+  <div class="head"><span class="q">Что решаем</span><h2>Шесть ям на одном экране</h2>
+    <p>Пять моделей из задания и настоящий атом водорода как эталон. Выберите яму: ниже появятся её уровни и волны, объяснение и параметры, которые можно менять.</p></div>
+  <div class="strip" id="strip" role="tablist" aria-label="Модель"></div>
+  <div class="stage" id="stage">
+    <div class="stage-h">
+      <div class="t"><h3 id="st-name"></h3><span class="fx" id="st-fx"></span></div>
+    </div>
+    <div class="toolbar">
+      <div class="grp" id="tb-lvl"><span>Уровень</span></div>
+      <div class="grp"><span>Вид</span><button class="pill" type="button" data-view="psi" aria-pressed="true">волна ψ</button><button class="pill" type="button" data-view="prob" aria-pressed="false">|ψ|²</button><button class="pill" type="button" data-view="3d" aria-pressed="false">3D во времени</button></div>
+      <div class="grp"><button class="pill" type="button" id="tb-zone" aria-pressed="true">запрещённая зона</button><button class="pill" type="button" id="tb-play" aria-pressed="true">пауза</button></div>
+    </div>
+    <div class="detail">
+      <div class="cv-wrap"><canvas id="st-cv" aria-label="Уровни энергии и волновые функции выбранной модели"></canvas></div>
+      <div class="side" id="st-side">
+        <div><h4>Что это</h4><p id="st-what"></p></div>
+        <div><h4>Как работает</h4><p id="st-how"></p></div>
+        <div id="st-sl" style="display:grid;gap:10px"></div>
+        <div id="st-3d" hidden style="display:grid;gap:8px">
+          <div class="grp"><button class="pill" type="button" data-two="1" aria-pressed="false">один уровень</button><button class="pill" type="button" data-two="2" aria-pressed="true">два уровня</button></div>
+          <p class="small">Вверх — Re ψ, в глубину — Im ψ, на задней стенке тень |ψ|². Один уровень только вращается, и |ψ|² не меняется. Смесь двух уровней качается с частотой ΔE. Тяните, чтобы повернуть.</p>
+        </div>
+      </div>
+    </div>
+    <div class="facts" id="st-facts"></div>
+  </div>
+</section>
+
+<!-- ================= СПЕКТРЫ ================= -->
+<section id="spectra">
+  <div class="head"><span class="q">Вопросы 1 и 2</span><h2>Как расположены уровни и можно ли оторвать электрон</h2>
+    <p>Спектр каждой ямы как спектральная пластинка: линия на каждом уровне. Энергии отсчитаны от нижнего уровня и поделены на первый шаг, чтобы разные модели можно было сравнить. Справа от порога спектр сплошной — там электрон свободен.</p></div>
+  <figure class="fig" style="margin:0"><div class="cv-wrap"><canvas id="barcode" aria-label="Спектры шести моделей"></canvas></div>
+    <figcaption>Наведите на линию, чтобы увидеть энергию уровня и шаг до предыдущего.</figcaption></figure>
+  <div class="takeaways">
+    <div><b>Разбегаются</b><p>Бесконечная, полубесконечная яма и x⁴: каждая следующая линия дальше предыдущей.</p></div>
+    <div><b>Равный шаг</b><p>Гармонический осциллятор: линии через одинаковое расстояние ω.</p></div>
+    <div class="hi"><b>Сгущаются к порогу</b><p>Морзе и водород: линии сходятся к границе сплошного спектра, как в серии Бальмера.</p></div>
+  </div>
+  <p style="margin-top:14px;color:var(--ink-2);max-width:70ch">Порог есть только у ям конечной глубины: полубесконечной (энергия отрыва 11,56), Морзе (9,68) и водорода (0,5 = 13,6 эВ). У бесконечной ямы и осцилляторов потенциал растёт без предела, и оторвать электрон нельзя ни при какой энергии.</p>
+</section>
+
+<!-- ================= ТУННЕЛИРОВАНИЕ ================= -->
+<section id="tunnel">
+  <div class="head"><span class="q">Вопрос 3</span><h2>Заходит ли волна под стенку</h2>
+    <p>Там, где <span class="m">V(x) &gt; E</span>, классический электрон оказаться не может. Квантовая волна туда заходит и затухает как <span class="m">e<sup>−κx</sup></span>, <span class="m">κ = √(2(V − E))</span>. Через бесконечную стенку <span class="m">κ = ∞</span>, и волна обрывается в ноль.</p></div>
+  <figure class="fig" style="margin:0"><div class="cv-wrap"><canvas id="tunnelPlot" aria-label="Доля вероятности под барьером по уровням"></canvas></div>
+    <figcaption>Доля вероятности в запрещённой зоне P для пяти нижних уровней каждой модели; точки подписаны номером уровня снизу.</figcaption></figure>
+  <p style="margin-top:14px;color:var(--ink-2);max-width:70ch">У осцилляторов эффект сильнее всего на нижнем уровне и ослабевает выше. У ям конечной глубины наоборот: чем ближе уровень к порогу, тем дальше уходит хвост. Диапазон у Морзе (13–25 %) почти совпадает с водородом (13–24 %).</p>
+</section>
+
+<!-- ================= ВЕРДИКТ ================= -->
+<section id="verdict">
+  <div class="head"><span class="q">Вердикт</span><h2>Какая модель похожа на атом</h2></div>
+  <div class="matrix"><table>
+    <thead><tr><th></th><th>Бесконечная</th><th>Полубесконечная</th><th>Гармонический</th><th>x⁴</th><th class="mh">Морзе</th><th>Водород</th></tr></thead>
+    <tbody>
+      <tr><th>Уровни сгущаются</th><td><span class="c n">разбегаются</span></td><td><span class="c n">разбегаются</span></td><td><span class="c h">равный шаг</span></td><td><span class="c n">разбегаются</span></td><td class="mh"><span class="c y">сгущаются</span></td><td><span class="c y">сгущаются</span></td></tr>
+      <tr><th>Можно оторвать</th><td><span class="c n">нет</span></td><td><span class="c y">11,56</span></td><td><span class="c n">нет</span></td><td><span class="c n">нет</span></td><td class="mh"><span class="c y">9,68</span></td><td><span class="c y">0,5</span></td></tr>
+      <tr><th>Туннелирование</th><td><span class="c n">0</span></td><td><span class="c y">0,2–14 %</span></td><td><span class="c y">8–16 %</span></td><td><span class="c y">6,5–13 %</span></td><td class="mh"><span class="c y">13–25 %</span></td><td><span class="c y">13–24 %</span></td></tr>
+      <tr><th>Совпадений с атомом</th><td>0 из 3</td><td>2 из 3</td><td>1 из 3</td><td>1 из 3</td><td class="mh"><b>3 из 3</b></td><td class="small">эталон</td></tr>
+    </tbody>
+  </table></div>
+  <div class="final">
+    <p class="big">Электрон в атоме лучше всего описывает <b>потенциал Морзе</b>.</p>
+    <ol>
+      <li>Его уровни сгущаются к порогу: шаг падает с 3,90 до 0,90, у водорода — с 0,375 до 0,011.</li>
+      <li>Яма конечной глубины, электрон можно оторвать.</li>
+      <li>Волна заходит под барьер почти так же, как у водорода.</li>
+      <li>Ограничение: у Морзе конечное число уровней, а у водорода бесконечное, потому что кулоновская яма −1/r спадает медленнее экспоненты. Точная модель атома — кулоновская; Морзе — лучшая из пяти предложенных.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= МЕТОД ================= -->
+<section id="method">
+  <div class="head"><span class="q">Как получены числа</span><h2>Метод конечных разностей</h2></div>
+  <div class="flow">
+    <div><span class="n">1 · сетка</span><p>Отрезок делим на шаги h, волну храним в узлах: ψⱼ = ψ(xⱼ). На краях ψ = 0 — стенка или место, где волна уже затухла.</p></div>
+    <div><span class="n">2 · разность</span><span class="m">ψ″ ≈ (ψⱼ₊₁ − 2ψⱼ + ψⱼ₋₁) / h²</span><p>Из ряда Тейлора. Отброшенный член (h²/12)·ψ⁗, ошибка порядка h².</p></div>
+    <div><span class="n">3 · матрица</span><span class="m">Hψ = Eψ</span><p>В каждом узле одно уравнение. У H на диагонали 1/h² + Vⱼ, рядом −1/2h². Матрица симметричная и трёхдиагональная.</p></div>
+    <div><span class="n">4 · собственные числа</span><p>Собственные числа H — уровни Eₙ, векторы — волны. Python: scipy.linalg.eigh_tridiagonal; браузер: бисекция Штурма и обратная итерация.</p></div>
+  </div>
+  <p style="color:var(--ink-2);max-width:72ch;margin-bottom:12px">Почему ошибка ∝ h²: для бесконечной ямы сеточную задачу можно решить точно. Подстановка ψⱼ = sin(jθ), θ = πnh/L, и формула sin(j+1)θ + sin(j−1)θ = 2cos θ · sin jθ дают <span class="m">Eₙ⁽ʰ⁾ = (2/h²)·sin²(πnh/2L) ≈ Eₙ(1 − π²n²h²/12L²)</span>. Программа совпадает с этой формулой до 4·10⁻¹³.</p>
+  <div class="mgrid">
+    <figure class="fig" style="margin:0"><div class="cv-wrap"><canvas id="m-cv" aria-label="Точная волна и решение на сетке"></canvas></div>
+      <label class="slider" for="m-N" style="margin-top:8px"><span>Узлов сетки N</span><output id="m-No">8</output><input type="range" id="m-N" min="3" max="60" step="1" value="8"></label>
+      <figcaption>Линия — точная волна основного уровня, точки — решение на сетке. <span id="m-read"></span></figcaption></figure>
+    <figure class="fig" style="margin:0"><div class="cv-wrap"><canvas id="m-conv" aria-label="Ошибка от шага сетки"></canvas></div>
+      <figcaption>Ошибка от шага h в логарифмическом масштабе. Наклон 2, то есть ошибка ∝ h². Точка — текущая сетка; щелчок выбирает сетку.</figcaption></figure>
+  </div>
+  <div class="tblwrap"><table class="acc">
+    <thead><tr><th>Модель</th><th style="text-align:right">Узлов</th><th style="text-align:right">Ошибка уровней</th><th>Контроль</th></tr></thead>
+    <tbody>
+      <tr><td>Бесконечная яма</td><td class="r">3 000</td><td class="r">5,9·10⁻⁵</td><td>Eₙ = π²n²/2L²</td></tr>
+      <tr><td>Полубесконечная</td><td class="r">12 000</td><td class="r">1,6·10⁻³</td><td>корни k·ctg(ka) = −κ; скачок V снижает точность</td></tr>
+      <tr><td>Гармонический</td><td class="r">4 000</td><td class="r">4,8·10⁻⁵</td><td>Eₙ = n + ½; P нижнего уровня 15,74 % против erfc(1) = 15,73 %</td></tr>
+      <tr><td>x⁴</td><td class="r">4 000</td><td class="r">8,2·10⁻⁵</td><td>экстраполяция Ричардсона; теория возмущений ошибается до 28 %</td></tr>
+      <tr><td>Морзе</td><td class="r">12 000</td><td class="r">3,9·10⁻⁵</td><td>точная формула уровней Морзе</td></tr>
+      <tr><td>Водород</td><td class="r">25 000</td><td class="r">1,2·10⁻⁵</td><td>Eₙ = −1/2n²; P(1s) = 13e⁻⁴ = 23,81 %</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small" style="margin-top:10px">Дополнительно: у волны n-го уровня ровно n нулей, волны разных уровней ортогональны с точностью 2·10⁻¹³. Графики на странице считаются в браузере на сетках 900–3200 узлов.</p>
+</section>
+<footer>Код расчётов: solver.py (Python, NumPy, SciPy).</footer>
+</main>
+
+<!-- ================= RAIL ================= -->
+<aside class="rail" aria-label="Справочник">
+  <div><h4>Разделы</h4><nav id="railnav">
+    <a href="#atlas">Шесть ям</a><a href="#spectra">Уровни и порог</a><a href="#tunnel">Туннелирование</a><a href="#verdict">Вердикт</a><a href="#method">Метод</a>
+  </nav></div>
+  <details class="railmob"><summary>Обозначения и как читать графики</summary><div class="mobbox"></div></details>
+  <div class="full" id="railRef">
+    <div><h4>Обозначения</h4>
+      <dl>
+        <dt>ψ(x)</dt><dd>волновая функция, «пси»</dd>
+        <dt>|ψ|²</dt><dd>плотность вероятности</dd>
+        <dt>ψ″</dt><dd>вторая производная по x</dd>
+        <dt>V(x)</dt><dd>форма ямы, потенциальная энергия</dd>
+        <dt>Eₙ</dt><dd>энергия n-го уровня</dd>
+        <dt>ΔEₙ</dt><dd>шаг Eₙ₊₁ − Eₙ</dd>
+        <dt>V &gt; E</dt><dd>запрещённая зона</dd>
+        <dt>P</dt><dd>доля вероятности в ней</dd>
+        <dt>h, N</dt><dd>шаг и число узлов сетки</dd>
+        <dt>L, a</dt><dd>ширина ямы</dd>
+        <dt>V₀</dt><dd>высота стенки</dd>
+        <dt>ω</dt><dd>частота осциллятора, «омега»</dd>
+        <dt>λ</dt><dd>сила добавки x⁴, «лямбда»</dd>
+        <dt>D, α</dt><dd>глубина и крутизна ямы Морзе</dd>
+        <dt>Z, r</dt><dd>заряд ядра, расстояние до него</dd>
+        <dt>κ</dt><dd>скорость затухания, «каппа»</dd>
+        <dt>∝, ≈</dt><dd>пропорционально, приближённо</dd>
+      </dl>
+      <p class="small" style="margin-top:8px">Единицы ħ = m = 1: длина 0,529 Å, энергия 27,2 эВ.</p>
+    </div>
+    <div><h4>Как читать графики</h4>
+      <div class="keyrow">
+        <i class="k" style="background:var(--ink-2)"></i><span>форма ямы V(x)</span>
+        <i class="k" style="background:var(--accent)"></i><span>уровень и его волна</span>
+        <i class="k box"></i><span>запрещённая зона уровня</span>
+        <i class="k hatch"></i><span>бесконечная стенка</span>
+        <i class="k dash"></i><span>порог ионизации</span>
+      </div>
+      <p class="small" style="margin-top:8px">Щелчок по яме выбирает уровень, наведение показывает значения. По умолчанию L = a = π, V₀ = 12, ω = 1, λ = 0,1, D = 12, α = 1, Z = 1.</p>
+    </div>
+  </div>
+</aside>
+</div>
+
+<script>
+(function(){
+"use strict";
+const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt = (v, d=3) => (v < 0 ? "−" : "") + Math.abs(v).toFixed(d).replace(".", ",");
+const pct = v => v < 5e-4 ? "0 %" : fmt(v * 100, 1) + " %";
+const sup = s => String(s).split("").map(c => "⁰¹²³⁴⁵⁶⁷⁸⁹"[c] || (c === "-" ? "⁻" : c)).join("");
+function sci(v){ if (!v) return "0"; let e = Math.floor(Math.log10(Math.abs(v))), m = v / 10 ** e; if (+m.toFixed(1) >= 10){ m /= 10; e++; } return m.toFixed(1).replace(".", ",") + "·10" + sup(e); }
+function alpha(col, a){ if (col.startsWith("#")){ const n = parseInt(col.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; } return col; }
+const NUMF = () => css("--f-num"), UIF = () => css("--f-ui");
+
+/* mobile rail: move the single reference block into the collapsible on narrow screens */
+(function(){ const ref = document.getElementById("railRef"), mob = document.querySelector(".mobbox"), home = ref.parentElement;
+  const place = () => { if (window.innerWidth <= 1100){ if (ref.parentElement !== mob){ mob.appendChild(ref); ref.classList.remove("full"); } } else if (ref.parentElement !== home){ home.appendChild(ref); ref.classList.add("full"); } };
+  place(); window.addEventListener("resize", place); })();
+
+/* ================= solver ================= */
+function eigTri(d, e, k){
+  const N = d.length, e2 = e * e; k = Math.min(k, N);
+  const count = lam => { let c = 0, q = d[0] - lam; if (q < 0) c++; for (let i = 1; i < N; i++){ q = d[i] - lam - e2 / (q === 0 ? 1e-300 : q); if (q < 0) c++; } return c; };
+  let lo = Infinity, hi = -Infinity; for (let i = 0; i < N; i++){ if (d[i] < lo) lo = d[i]; if (d[i] > hi) hi = d[i]; }
+  lo -= 2 * Math.abs(e); hi += 2 * Math.abs(e);
+  const vals = [];
+  for (let j = 0; j < k; j++){ let a = j ? vals[j-1] : lo, b = hi; for (let it = 0; it < 60; it++){ const m = .5 * (a + b); if (count(m) > j) b = m; else a = m; } vals.push(.5 * (a + b)); }
+  const cp = new Float64Array(N), dp = new Float64Array(N);
+  const vecs = vals.map(lam => { const sg = lam - 1e-10 * (1 + Math.abs(lam)); const v = new Float64Array(N).fill(1);
+    for (let it = 0; it < 3; it++){ cp[0] = e / (d[0] - sg); dp[0] = v[0] / (d[0] - sg);
+      for (let i = 1; i < N; i++){ let den = d[i] - sg - e * cp[i-1]; if (den === 0) den = 1e-300; cp[i] = e / den; dp[i] = (v[i] - e * dp[i-1]) / den; }
+      const y = new Float64Array(N); y[N-1] = dp[N-1]; for (let i = N - 2; i >= 0; i--) y[i] = dp[i] - cp[i] * y[i+1];
+      let s = 0; for (let i = 0; i < N; i++) s += y[i] * y[i]; s = Math.sqrt(s); for (let i = 0; i < N; i++) v[i] = y[i] / s; }
+    let mx = 0, j0 = 0; for (let i = 0; i < N; i++) mx = Math.max(mx, Math.abs(v[i])); for (let i = 0; i < N; i++) if (Math.abs(v[i]) > 1e-3 * mx){ j0 = i; break; }
+    if (v[j0] < 0) for (let i = 0; i < N; i++) v[i] = -v[i]; return v; });
+  return {vals, vecs};
+}
+function semiRoots(p){ const km = Math.sqrt(2 * p.V0), f = k => k * Math.cos(k * p.a) + Math.sqrt(Math.max(0, km * km - k * k)) * Math.sin(k * p.a);
+  const out = []; let k0 = 1e-6, f0 = f(k0);
+  for (let i = 1; i <= 4000; i++){ const k1 = km * i / 4000 * .999999, f1 = f(k1); if (f0 * f1 < 0){ let a = k0, b = k1; for (let t = 0; t < 60; t++){ const c = (a + b) / 2; if (f(a) * f(c) <= 0) b = c; else a = c; } out.push(((a + b) / 2) ** 2 / 2); } k0 = k1; f0 = f1; }
+  return out; }
+const MODELS = {
+  infinite: {name: "Бесконечная яма", short: "Бесконечная", color: "--s1", n0: 1, k: 6, N: 900, fx: "V = 0 внутри, ∞ на стенках",
+    what: "Электрон заперт между двумя непроницаемыми стенками на расстоянии L, например в квантовой точке.",
+    how: "На стенках ψ = 0, поэтому внутри помещается целое число полуволн, как на закреплённой струне. Короче волна — выше энергия: Eₙ = π²n²/2L². Энергия растёт как n², шаги увеличиваются. Стенка бесконечна при любой энергии, поэтому электрон не вылетает и под неё не заходит.",
+    params: [{id: "L", label: "Ширина ямы L", min: 1.5, max: 6, step: .05, val: Math.PI}],
+    V: p => x => 0, dom: p => [0, p.L], win: p => [-.12 * p.L, 1.12 * p.L], walls: p => [0, p.L], thr: () => Infinity, exact: (p, n) => Math.PI ** 2 * (n + 1) ** 2 / (2 * p.L * p.L)},
+  semi: {name: "Полубесконечная яма", short: "Полубеск.", color: "--s2", n0: 0, k: 8, N: 2600, fx: "V = ∞ | 0 | V₀",
+    what: "Одна стенка непроницаема, другая — ступенька высоты V₀. Яма конечной глубины: у электрона есть выход.",
+    how: "Внутри волна — синус, за ступенькой затухающая экспонента e^(−κ(x−a)), κ = √(2(V₀ − E)). Сшивка на ступеньке даёт k·ctg(ka) = −κ, у этого уравнения конечное число корней. Чем ниже стенка, тем меньше уровней. При E > V₀ электрон свободен. Нижние уровни ступеньку почти не чувствуют и разбегаются, как в бесконечной яме.",
+    params: [{id: "V0", label: "Высота стенки V₀", min: 2, max: 30, step: .5, val: 12}, {id: "a", label: "Ширина ямы a", min: 1, max: 5, step: .05, val: Math.PI}],
+    V: p => x => x < p.a ? 0 : p.V0, dom: p => [0, p.a + 28], win: p => [-.3, p.a + 5.5], walls: () => [0, null], thr: p => p.V0, exact: (p, n, c) => c[n]},
+  harmonic: {name: "Гармонический осциллятор", short: "Гармонический", color: "--s3", n0: 0, k: 6, N: 1300, fx: "V = ½ω²x²",
+    what: "Яма-парабола, как шарик на пружине. Так описывают малые колебания атомов в молекуле.",
+    how: "Уровни известны точно: Eₙ = ω(n + ½), шаг ровно ω. Нижний уровень на ω/2 выше дна: частица не может покоиться. В точках поворота x = ±√(2E)/ω классический шарик разворачивается, а волна идёт дальше и затухает. Парабола растёт бесконечно, оторвать электрон нельзя.",
+    params: [{id: "w", label: "Частота ω", min: .4, max: 2.5, step: .05, val: 1}],
+    V: p => x => .5 * p.w * p.w * x * x, dom: p => { const R = Math.sqrt(11 / p.w) + 6 / Math.sqrt(p.w); return [-R, R]; }, win: null, thr: () => Infinity, exact: (p, n) => p.w * (n + .5)},
+  quartic: {name: "Ангармонический x⁴", short: "x⁴", color: "--s4", n0: 0, k: 6, N: 1300, fx: "V = ½x² + λx⁴",
+    what: "Пружина, которая при сильном растяжении становится жёстче.",
+    how: "Добавка λx⁴ поднимает стенки, и сильнее всего её чувствуют верхние уровни: шаг растёт. Точной формулы нет, приближённая теория ошибается тем сильнее, чем выше уровень, поэтому нужен численный счёт. Стенки круче параболы, хвосты волны короче.",
+    params: [{id: "lam", label: "Добавка λ", min: 0, max: 1, step: .01, val: .1}],
+    V: p => x => .5 * x * x + p.lam * x ** 4, dom: () => [-8, 8], win: null, thr: () => Infinity, exact: null},
+  morse: {name: "Ангармонический Морзе", short: "Морзе", color: "--s5", n0: 0, k: 8, N: 2600, fx: "V = D(1 − e^(−αx))²",
+    what: "Связь двух атомов: при сжатии резкое отталкивание, при растяжении связь слабеет и энергия выходит на плато D.",
+    how: "Около дна яма почти параболическая, а выше расширяется, поэтому уровни сгущаются к D: Eₙ = ω₀(n + ½) − ω₀²(n + ½)²/4D, ω₀ = α√(2D). Шаг убывает линейно. Уровней конечное число, n ≤ √(2D)/α − ½. Выше D электрон свободен. К пологой правой стенке хвост волны уходит далеко.",
+    params: [{id: "D", label: "Глубина D", min: 3, max: 30, step: .5, val: 12}, {id: "a", label: "Крутизна α", min: .5, max: 2, step: .05, val: 1}],
+    V: p => x => p.D * (1 - Math.exp(-p.a * x)) ** 2, dom: p => [-2.5 / p.a, 32 / p.a], win: p => [-1.1 / p.a, 8 / p.a], thr: p => p.D,
+    exact: (p, n) => { const w = p.a * Math.sqrt(2 * p.D), nm = Math.floor(Math.sqrt(2 * p.D) / p.a - .5); return n <= nm ? w * (n + .5) - (w * (n + .5)) ** 2 / (4 * p.D) : null; }},
+  hydrogen: {name: "Атом водорода", short: "Водород", color: "--s6", n0: 1, k: 5, N: 3200, fx: "V = −Z/r",
+    what: "Настоящий атом: электрон в поле ядра. Эталон, с которым сравниваем модели.",
+    how: "Для сферически симметричных s-состояний уравнение для u(r) = r·R(r) совпадает с одномерным при u(0) = 0, поэтому решаем его тем же методом. Кулоновская яма спадает медленно, как 1/r, и уровней бесконечно много: Eₙ = −Z²/2n², они сгущаются к нулю. Ионизация с нижнего уровня стоит 0,5 хартри = 13,6 эВ.",
+    params: [{id: "Z", label: "Заряд ядра Z", min: 1, max: 3, step: 1, val: 1}],
+    V: p => r => -p.Z / r, dom: p => [0, 100 / p.Z], win: p => [0, 55 / p.Z], thr: () => 0, exact: (p, n) => -p.Z * p.Z / (2 * (n + 1) ** 2)}
+};
+const ORDER = ["infinite", "semi", "harmonic", "quartic", "morse", "hydrogen"];
+const defaults = k => { const o = {}; MODELS[k].params.forEach(q => o[q.id] = q.val); return o; };
+function solveModel(key, p){
+  const c = MODELS[key], [a, b] = c.dom(p), N = c.N, h = (b - a) / (N + 1), V = c.V(p);
+  const Vg = new Float64Array(N), d = new Float64Array(N);
+  for (let j = 0; j < N; j++){ Vg[j] = V(a + (j + 1) * h); d[j] = 1 / (h * h) + Vg[j]; }
+  const thr = c.thr(p), r = eigTri(d, -.5 / (h * h), c.k);
+  let nb = r.vals.findIndex(v => v >= thr); if (nb < 0) nb = r.vals.length;
+  const E = r.vals.slice(0, nb), vec = r.vecs.slice(0, nb);
+  const pf = vec.map((v, n) => { let s = 0; for (let j = 0; j < N; j++) if (Vg[j] > E[n]) s += v[j] * v[j]; return s; });
+  let win; if (c.win) win = c.win(p); else { const top = E[E.length - 1] * 1.3 + .2; let R = .5; while (V(R) < top && R < 20) R += .02; win = [-R, R]; }
+  const NP = 420, x = new Float64Array(NP), Vp = new Array(NP), wl = c.walls ? c.walls(p) : null;
+  for (let i = 0; i < NP; i++){ const xx = win[0] + (win[1] - win[0]) * i / (NP - 1); x[i] = xx;
+    Vp[i] = (wl && ((wl[0] !== null && xx < wl[0]) || (wl[1] !== null && xx > wl[1]))) || (key === "hydrogen" && xx <= 0) ? null : V(xx); }
+  const s = 1 / Math.sqrt(h);
+  const psi = vec.map(v => { const o = new Float64Array(NP); for (let i = 0; i < NP; i++){ const t = (x[i] - a) / h - 1, j = Math.floor(t);
+    const y0 = j < 0 || j >= N ? 0 : v[j], y1 = j + 1 < 0 || j + 1 >= N ? 0 : v[j+1]; o[i] = s * (y0 + (y1 - y0) * (t - j)); } return o; });
+  const cache = key === "semi" ? semiRoots(p) : null;
+  return {key, p, E, pf, x, V: Vp, psi, thr, n0: c.n0, exact: E.map((_, n) => c.exact ? c.exact(p, n, cache) : null)};
+}
+
+/* ================= helpers ================= */
+function fit(cv, h){ const w = cv.parentElement.clientWidth, dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)){ cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.height = h + "px"; }
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); return {g, w, h}; }
+function addTip(host){ const t = document.createElement("div"); t.className = "tip"; t.hidden = true; host.appendChild(t);
+  return {show(x, y, html){ t.innerHTML = html; t.hidden = false; const W = host.clientWidth, half = t.offsetWidth / 2; t.style.left = Math.max(half + 2, Math.min(W - half - 2, x)) + "px"; t.style.top = y + "px"; }, hide(){ t.hidden = true; }}; }
+function hatch(g, x, y, w, h, col){ g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip(); g.strokeStyle = col; g.globalAlpha = .4; g.lineWidth = 1; g.beginPath();
+  for (let k = -h; k < w + h; k += 7){ g.moveTo(x + k, y + h); g.lineTo(x + k + h, y); } g.stroke(); g.restore(); }
+const animated = [], visible = new Set();
+const io = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? visible.add(e.target) : visible.delete(e.target))) : null;
+function animate(el, fn){ animated.push({el, fn}); if (io) io.observe(el); else visible.add(el); }
+let lastTs = 0; function loop(ts){ const dt = Math.min(.05, (ts - lastTs) / 1000 || 0); lastTs = ts; animated.forEach(a => { if (visible.has(a.el)) a.fn(dt); }); requestAnimationFrame(loop); }
+
+/* ================= well drawing (shared by all cards) ================= */
+function drawWell(cv, s, st, H, compact){
+  const {g, w, h} = fit(cv, H);
+  const C = {ink: css("--ink"), ink2: css("--ink-2"), muted: css("--muted"), line: css("--line"), wall: css("--wall"), forbid: css("--forbid"), fl: css("--forbid-line"), col: css(MODELS[s.key].color)};
+  const m = compact ? {l: 4, r: 4, t: 6, b: 6} : {l: 36, r: 40, t: 8, b: 20};
+  let y0, y1; if (s.key === "hydrogen"){ y0 = s.E[0] * 1.2; y1 = -s.E[0] * .14; } else if (isFinite(s.thr)){ y0 = -.07 * s.thr; y1 = s.thr * 1.15; } else { const L = s.E.length, top = s.E[L-1] + .9 * (s.E[L-1] - s.E[L-2]); y0 = -.07 * top; y1 = top; }
+  const xa = s.x[0], xb = s.x[s.x.length-1], X = x => m.l + (x - xa) / (xb - xa) * (w - m.l - m.r), Y = y => m.t + (y1 - y) / (y1 - y0) * (h - m.t - m.b);
+  g.clearRect(0, 0, w, h); g.font = "11px " + NUMF();
+  if (!compact){ const span = y1 - y0, pw = 10 ** Math.floor(Math.log10(span / 5)), step = [1, 2, 2.5, 5, 10].map(k => k * pw).find(v => span / v <= 5.5);
+    g.strokeStyle = C.line; g.lineWidth = 1; g.fillStyle = C.muted; g.textAlign = "right";
+    for (let v = Math.ceil(y0 / step) * step; v <= y1 + 1e-9; v += step){ const y = Math.round(Y(v)) + .5; g.beginPath(); g.moveTo(m.l, y); g.lineTo(w - m.r, y); g.stroke(); g.fillText(fmt(v, step < .1 ? 2 : (step < 1 ? 1 : 0)), m.l - 6, y + 4); }
+    g.textAlign = "left"; g.fillText("E", 2, m.t + 8); g.textAlign = "right"; g.fillText(s.key === "hydrogen" ? "r" : "x", w - m.r, h - 4); }
+  g.save(); g.beginPath(); g.rect(m.l, m.t, w - m.l - m.r, h - m.t - m.b); g.clip();
+  const sel = Math.min(st.sel, s.E.length - 1), Es = s.E[sel];
+  let i0 = -1; for (let i = 0; i <= s.x.length; i++){ const iw = i < s.x.length && s.V[i] === null; if (iw && i0 < 0) i0 = i;
+    if (!iw && i0 >= 0){ const wx = X(s.x[i0]) - 1, ww = X(s.x[i-1]) - X(s.x[i0]) + 2; g.fillStyle = C.wall; g.fillRect(wx, 0, ww, h); if (st.zone){ g.fillStyle = C.forbid; g.fillRect(wx, 0, ww, h); } hatch(g, wx, 0, ww, h, C.fl); i0 = -1; } }
+  if (st.zone){ g.fillStyle = C.forbid; let f0 = -1; for (let i = 0; i <= s.x.length; i++){ const fb = i < s.x.length && s.V[i] !== null && s.V[i] > Es; if (fb && f0 < 0) f0 = i;
+    if (!fb && f0 >= 0){ const A = f0 ? (s.x[f0] + s.x[f0-1]) / 2 : s.x[0], B = i < s.x.length ? (s.x[i-1] + s.x[i]) / 2 : s.x[i-1]; g.fillRect(X(A), 0, X(B) - X(A), h); f0 = -1; } } }
+  if (isFinite(s.thr)){ g.strokeStyle = C.muted; g.lineWidth = 1; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(m.l, Y(s.thr)); g.lineTo(w - m.r, Y(s.thr)); g.stroke(); g.setLineDash([]); }
+  g.strokeStyle = C.ink2; g.lineWidth = compact ? 1.6 : 2; g.lineJoin = "round"; g.beginPath(); let pen = false;
+  for (let i = 0; i < s.x.length; i++){ const v = s.V[i]; if (v === null){ pen = false; continue; } const yy = Y(Math.max(v, y0 - (y1 - y0))); pen ? g.lineTo(X(s.x[i]), yy) : g.moveTo(X(s.x[i]), yy); pen = true; } g.stroke();
+  const L = s.E.length, base = s.key === "hydrogen" ? 1.25 * s.E[0] : 0;
+  const gap1 = L > 1 ? s.E[1] - s.E[0] : 1, rate = Math.min(2 * Math.PI / 3.2 / gap1, 2 * Math.PI / 1.6 / Math.max(1e-9, s.E[L-1] - base));
+  let gmin = Infinity; for (let n = 1; n < L; n++) gmin = Math.min(gmin, s.E[n] - s.E[n-1]); if (!isFinite(gmin)) gmin = (y1 - y0) * .2;
+  for (let n = 0; n < L; n++){
+    const E = s.E[n], on = n === sel;
+    const loc = Math.min(n > 0 ? E - s.E[n-1] : Infinity, n < L - 1 ? s.E[n+1] - E : (isFinite(s.thr) ? Math.max(s.thr - E, gmin) : Infinity));
+    const amp = .42 * (isFinite(loc) ? loc : gmin), ps = s.psi[n]; let mx = 0; for (let i = 0; i < ps.length; i++) mx = Math.max(mx, Math.abs(ps[i]));
+    g.globalAlpha = on ? 1 : .3; g.strokeStyle = C.col; g.lineWidth = 1; g.beginPath(); pen = false;
+    for (let i = 0; i < s.x.length; i++){ const ok = s.V[i] !== null && s.V[i] <= E; if (ok){ pen ? g.lineTo(X(s.x[i]), Y(E)) : g.moveTo(X(s.x[i]), Y(E)); pen = true; } else pen = false; } g.stroke();
+    if (s.key === "hydrogen" && n > 2 && !on){ g.globalAlpha = 1; continue; }
+    if (st.view === "prob"){
+      g.fillStyle = alpha(C.col, on ? .32 : .14); g.beginPath(); g.moveTo(X(s.x[0]), Y(E));
+      for (let i = 0; i < s.x.length; i++) g.lineTo(X(s.x[i]), Y(E + amp * 1.7 * (ps[i] / mx) ** 2)); g.lineTo(X(s.x[s.x.length-1]), Y(E)); g.closePath(); g.fill();
+      g.lineWidth = on ? 2.2 : 1.3; g.beginPath(); for (let i = 0; i < s.x.length; i++){ const yy = Y(E + amp * 1.7 * (ps[i] / mx) ** 2); i ? g.lineTo(X(s.x[i]), yy) : g.moveTo(X(s.x[i]), yy); } g.stroke();
+    } else {
+      const c = Math.cos((E - base) * rate * st.t); g.lineWidth = on ? (compact ? 2.2 : 2.6) : 1.3; g.beginPath(); pen = false;
+      for (let i = 0; i < s.x.length; i++){ if (s.V[i] === null && Math.abs(ps[i]) < 1e-9){ pen = false; continue; } const yy = Y(E + amp * ps[i] / mx * c); pen ? g.lineTo(X(s.x[i]), yy) : g.moveTo(X(s.x[i]), yy); pen = true; } g.stroke();
+    }
+    g.globalAlpha = 1;
+  }
+  g.restore();
+  if (!compact){ g.textAlign = "left"; let last = Infinity;
+    for (let n = 0; n < L; n++){ const y = Y(s.E[n]); if (last - y < 12 || y < m.t || y > h - m.b) continue; g.fillStyle = n === sel ? C.ink : C.muted;
+      g.font = (n === sel ? "500 " : "") + "11px " + NUMF(); g.fillText("n=" + (n + s.n0), w - m.r + 5, y + 4); last = y; } }
+  return {X, Y, y0, y1, m, w, h, xa, xb};
+}
+
+/* ================= 3D view (inside an open card) ================= */
+function draw3D(cv, s, st, H){
+  const {g, w, h} = fit(cv, H);
+  const C = {muted: css("--muted"), line: css("--line"), ink2: css("--ink-2"), col: css(MODELS[s.key].color), forbid: css("--forbid")};
+  g.clearRect(0, 0, w, h);
+  const n = Math.min(st.sel, s.E.length - 1), two = st.two && s.E.length > 1, n1 = two ? Math.min(n + 1, s.E.length - 1) : n;
+  const gap = Math.abs(s.E[Math.min(n + 1, s.E.length - 1)] - s.E[n]) || 1, rate = 2 * Math.PI / 3.6 / gap, base = s.key === "hydrogen" ? 1.25 * s.E[0] : 0;
+  const ph0 = (s.E[n] - base) * rate * st.t, ph1 = (s.E[n1] - base) * rate * st.t;
+  const b0 = s.psi[n], b1 = s.psi[n1], k0 = two ? Math.SQRT1_2 : 1, k1 = two ? Math.SQRT1_2 : 0;
+  let env = 0; for (let i = 0; i < b0.length; i++) env = Math.max(env, Math.abs(b0[i]) + Math.abs(b1[i]));
+  let iA = 0, iB = b0.length - 1; while (iA < iB && Math.abs(b0[iA]) + Math.abs(b1[iA]) < .01 * env) iA++; while (iB > iA && Math.abs(b0[iB]) + Math.abs(b1[iB]) < .01 * env) iB--;
+  const pad = Math.round((iB - iA) * .22); iA = Math.max(0, iA - pad); iB = Math.min(b0.length - 1, iB + pad);
+  const xs = s.x.subarray(iA, iB + 1), Vs = s.V.slice(iA, iB + 1), a0 = b0.subarray(iA, iB + 1), a1 = b1.subarray(iA, iB + 1), N = xs.length;
+  let M = 0; for (let i = 0; i < N; i++) M = Math.max(M, k0 * Math.abs(a0[i]) + k1 * Math.abs(a1[i]));
+  const Sc = .85 / M, XW = x => -1.6 + 3.2 * (x - xs[0]) / (xs[N-1] - xs[0]);
+  const cy = Math.cos(st.yaw), sy = Math.sin(st.yaw), cp = Math.cos(st.pitch), sp = Math.sin(st.pitch), dist = 4.8, f = Math.min(w, h * 1.3) * 1.05;
+  const P = (x, y, z) => { const x1 = cy * x + sy * z, z1 = -sy * x + cy * z, y2 = cp * y - sp * z1, z2 = sp * y + cp * z1, k = f / (dist + z2); return [w / 2 + k * x1, h * .46 - k * y2]; };
+  const line = (pts, col, lw) => { g.strokeStyle = col; g.lineWidth = lw; g.beginPath(); pts.forEach((q, i) => { const r = P(...q); i ? g.lineTo(r[0], r[1]) : g.moveTo(r[0], r[1]); }); g.stroke(); };
+  const FL = -1.05, BK = -1.05;
+  for (let i = 0; i <= 8; i++){ const x = -1.6 + 3.2 * i / 8; line([[x, FL, -1.05], [x, FL, 1.05]], C.line, 1); }
+  for (let i = 0; i <= 4; i++){ const z = -1.05 + 2.1 * i / 4; line([[-1.6, FL, z], [1.6, FL, z]], C.line, 1); }
+  g.fillStyle = C.forbid; let r0 = -1; for (let i = 0; i <= N; i++){ const fb = i < N && (Vs[i] === null || Vs[i] > s.E[n]); if (fb && r0 < 0) r0 = i;
+    if (!fb && r0 >= 0){ const A = XW(xs[r0]), B = XW(xs[i-1]); const q = [P(A, FL, -1.05), P(B, FL, -1.05), P(B, FL, 1.05), P(A, FL, 1.05)]; g.beginPath(); q.forEach((r, j) => j ? g.lineTo(r[0], r[1]) : g.moveTo(r[0], r[1])); g.closePath(); g.fill(); r0 = -1; } }
+  const re = new Float64Array(N), im = new Float64Array(N);
+  for (let i = 0; i < N; i++){ re[i] = k0 * a0[i] * Math.cos(ph0) + k1 * a1[i] * Math.cos(ph1); im[i] = -(k0 * a0[i] * Math.sin(ph0) + k1 * a1[i] * Math.sin(ph1)); }
+  g.fillStyle = alpha(C.col, .24); g.beginPath(); for (let i = 0; i < N; i++){ const r = P(XW(xs[i]), FL + 1.2 * (re[i] ** 2 + im[i] ** 2) / (M * M), BK); i ? g.lineTo(r[0], r[1]) : g.moveTo(r[0], r[1]); }
+  let q = P(1.6, FL, BK); g.lineTo(q[0], q[1]); q = P(-1.6, FL, BK); g.lineTo(q[0], q[1]); g.closePath(); g.fill();
+  const top = isFinite(s.thr) ? Math.max(s.thr * 1.15, 1e-9) : s.E[s.E.length-1] * 1.2, bot = s.key === "hydrogen" ? s.E[0] * 1.2 : -.07 * top, VW = v => FL + 2.1 * (v - bot) / (top - bot);
+  g.strokeStyle = C.ink2; g.globalAlpha = .55; g.lineWidth = 1.4; g.beginPath(); let pen = false;
+  for (let i = 0; i < N; i++){ const v = Vs[i]; if (v === null || v > top || v < bot){ pen = false; continue; } const r = P(XW(xs[i]), VW(v), BK); pen ? g.lineTo(r[0], r[1]) : g.moveTo(r[0], r[1]); pen = true; } g.stroke(); g.globalAlpha = 1;
+  line([[-1.7, 0, 0], [1.75, 0, 0]], C.muted, 1); line([[-1.6, -.9, 0], [-1.6, .9, 0]], C.muted, 1); line([[-1.6, 0, -.9], [-1.6, 0, .9]], C.muted, 1);
+  g.fillStyle = C.muted; g.font = "11px " + NUMF(); g.textAlign = "center"; [[[1.85, 0, 0], s.key === "hydrogen" ? "r" : "x"], [[-1.6, 1.02, 0], "Re ψ"], [[-1.6, 0, 1.05], "Im ψ"]].forEach(([p, t]) => { const r = P(...p); g.fillText(t, r[0], r[1]); });
+  g.strokeStyle = alpha(C.col, .28); g.lineWidth = 1; for (let i = 0; i < N; i += 4){ const A = P(XW(xs[i]), 0, 0), B = P(XW(xs[i]), Sc * re[i], Sc * im[i]); g.beginPath(); g.moveTo(A[0], A[1]); g.lineTo(B[0], B[1]); g.stroke(); }
+  g.strokeStyle = C.col; g.lineWidth = 2.8; g.lineJoin = "round"; g.beginPath(); for (let i = 0; i < N; i++){ const r = P(XW(xs[i]), Sc * re[i], Sc * im[i]); i ? g.lineTo(r[0], r[1]) : g.moveTo(r[0], r[1]); } g.stroke();
+}
+
+/* ================= atlas: thumbnails + stage ================= */
+const isWide = () => window.innerWidth > 760;
+const G = {sel: 0, view: "psi", zone: true, play: !reduce, t: .7, two: true, yaw: -.45, pitch: -.26};
+const ST = {}; ORDER.forEach(k => ST[k] = {p: defaults(k), sol: null});
+ORDER.forEach(k => ST[k].sol = solveModel(k, ST[k].p));
+let cur = "infinite";
+const strip = document.getElementById("strip"), thumbs = {};
+ORDER.forEach(k => { const b = document.createElement("button"); b.type = "button"; b.className = "thumb"; b.setAttribute("role", "tab"); b.id = "th-" + k;
+  b.innerHTML = `<span><i style="background:var(${MODELS[k].color})"></i>${MODELS[k].short}</span><canvas aria-hidden="true"></canvas>`;
+  b.addEventListener("click", () => select(k)); strip.appendChild(b); thumbs[k] = b.querySelector("canvas"); });
+function drawThumbs(){ ORDER.forEach(k => drawWell(thumbs[k], ST[k].sol, {sel: G.sel, view: "psi", zone: false, t: G.t}, 74, true)); }
+const cv = document.getElementById("st-cv"), side = document.getElementById("st-side"), tip = addTip(cv.parentElement);
+let map = null, drag = null;
+function H(){ const w = cv.parentElement.clientWidth; return Math.round(Math.max(280, Math.min(420, isWide() ? side.offsetHeight : w * .65))); }
+function drawStage(){ const s = ST[cur].sol; if (G.view === "3d"){ map = null; draw3D(cv, s, G, H()); } else map = drawWell(cv, s, G, H(), false); }
+function facts(){ const s = ST[cur].sol, n = Math.min(G.sel, s.E.length - 1), ex = s.exact[n], col = `var(${MODELS[cur].color})`;
+  const gaps = []; for (let i = 1; i < Math.min(6, s.E.length); i++) gaps.push(s.E[i] - s.E[i-1]); const gm = Math.max(...gaps, 1e-9), fin = isFinite(s.thr);
+  document.getElementById("st-facts").innerHTML =
+    `<div class="fact"><span>Уровень n = ${n + s.n0}</span><b>E = ${fmt(s.E[n], 4)}</b><small>${ex !== null && ex !== undefined ? `точно ${fmt(ex, 4)}, ошибка ${sci(Math.abs(s.E[n] - ex))}` : "точной формулы нет"}</small></div>` +
+    `<div class="fact"><span>Шаги ΔEₙ</span><div class="bars">${gaps.map(g => `<i style="height:${Math.max(8, 100 * g / gm)}%;background:${col}"></i>`).join("")}</div><small class="num">${gaps.map(g => fmt(g, 2)).join(" · ")}</small></div>` +
+    `<div class="fact ${fin ? "yes" : "no"}"><span>Энергия отрыва</span><b>${fin ? fmt(s.thr - s.E[0], 2) : "нет"}</b><small>${fin ? (cur === "hydrogen" ? "уровней бесконечно много" : `уровней ниже порога: ${s.E.length}`) : "яма бесконечно глубокая"}</small></div>` +
+    `<div class="fact ${s.pf[n] > 5e-4 ? "yes" : "no"}"><span>Под барьером, P</span><b>${pct(s.pf[n])}</b><small>для уровня n = ${n + s.n0}</small></div>`; }
+function levels(){ const host = document.getElementById("tb-lvl"); host.innerHTML = "<span>Уровень</span>"; const s = ST[cur].sol;
+  if (G.sel >= s.E.length) G.sel = 0;
+  s.E.slice(0, 6).forEach((_, i) => { const b = document.createElement("button"); b.type = "button"; b.className = "pill"; b.textContent = "n = " + (i + s.n0); b.setAttribute("aria-pressed", i === G.sel);
+    b.addEventListener("click", () => setLevel(i)); host.appendChild(b); }); }
+function setLevel(i){ G.sel = i; document.querySelectorAll("#tb-lvl .pill").forEach((b, j) => b.setAttribute("aria-pressed", j === i)); facts(); drawStage(); drawThumbs(); }
+function sliders(){ const host = document.getElementById("st-sl"); host.innerHTML = "";
+  MODELS[cur].params.forEach(q => { const id = "p-" + cur + "-" + q.id, dec = q.step < 1 ? 2 : 0, l = document.createElement("label"); l.className = "slider"; l.htmlFor = id;
+    l.innerHTML = `<span>${q.label}</span><output>${fmt(ST[cur].p[q.id], dec)}</output>`; const inp = document.createElement("input"); inp.type = "range"; inp.id = id; Object.assign(inp, {min: q.min, max: q.max, step: q.step}); inp.value = ST[cur].p[q.id];
+    inp.addEventListener("input", () => { ST[cur].p[q.id] = +inp.value; l.querySelector("output").textContent = fmt(ST[cur].p[q.id], dec); ST[cur].sol = solveModel(cur, ST[cur].p); levels(); facts(); drawStage(); drawThumbs(); });
+    l.appendChild(inp); host.appendChild(l); });
+  const r = document.createElement("button"); r.type = "button"; r.className = "pill"; r.textContent = "параметры по умолчанию"; r.style.justifySelf = "start";
+  r.addEventListener("click", () => { ST[cur].p = defaults(cur); ST[cur].sol = solveModel(cur, ST[cur].p); sliders(); levels(); facts(); drawStage(); drawThumbs(); }); host.appendChild(r); }
+function select(k){ cur = k; ORDER.forEach(x => document.getElementById("th-" + x).setAttribute("aria-selected", x === k));
+  const M = MODELS[k]; document.getElementById("st-name").innerHTML = `<i style="background:var(${M.color})"></i>${M.name}`; document.getElementById("st-fx").textContent = M.fx;
+  document.getElementById("st-what").textContent = M.what; document.getElementById("st-how").textContent = M.how;
+  sliders(); levels(); facts(); requestAnimationFrame(() => { drawStage(); drawThumbs(); }); }
+document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => { G.view = b.dataset.view; document.querySelectorAll("[data-view]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  document.getElementById("st-3d").hidden = G.view !== "3d"; cv.style.cursor = G.view === "3d" ? "grab" : "pointer"; drawStage(); }));
+document.querySelectorAll("[data-two]").forEach(b => b.addEventListener("click", () => { G.two = b.dataset.two === "2"; document.querySelectorAll("[data-two]").forEach(x => x.setAttribute("aria-pressed", x === b)); drawStage(); }));
+const zb = document.getElementById("tb-zone"); zb.addEventListener("click", () => { G.zone = !G.zone; zb.setAttribute("aria-pressed", G.zone); drawStage(); });
+const pb = document.getElementById("tb-play"); const syncP = () => { pb.setAttribute("aria-pressed", G.play); pb.textContent = G.play ? "пауза" : "пуск"; }; syncP();
+pb.addEventListener("click", () => { G.play = !G.play; syncP(); });
+cv.style.cursor = "pointer";
+cv.addEventListener("click", e => { if (!map) return; const r = cv.getBoundingClientRect(), py = e.clientY - r.top, s = ST[cur].sol; const E = map.y1 - (py - map.m.t) / (map.h - map.m.t - map.m.b) * (map.y1 - map.y0);
+  let b = 0; s.E.forEach((v, i) => { if (Math.abs(v - E) < Math.abs(s.E[b] - E)) b = i; }); setLevel(b); });
+cv.addEventListener("pointerdown", e => { if (G.view !== "3d") return; drag = {x: e.clientX, y: e.clientY, yaw: G.yaw, pitch: G.pitch}; cv.setPointerCapture(e.pointerId); cv.style.cursor = "grabbing"; });
+cv.addEventListener("pointermove", e => {
+  if (drag){ G.yaw = drag.yaw + (e.clientX - drag.x) * .01; G.pitch = Math.max(-1.35, Math.min(.35, drag.pitch - (e.clientY - drag.y) * .008)); drawStage(); return; }
+  if (!map) return; const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top, s = ST[cur].sol;
+  const E = map.y1 - (py - map.m.t) / (map.h - map.m.t - map.m.b) * (map.y1 - map.y0); let n = 0; s.E.forEach((v, i) => { if (Math.abs(v - E) < Math.abs(s.E[n] - E)) n = i; });
+  const xv = map.xa + (px - map.m.l) / (map.w - map.m.l - map.m.r) * (map.xb - map.xa); let i = Math.round((xv - map.xa) / (map.xb - map.xa) * (s.x.length - 1)); i = Math.max(0, Math.min(s.x.length - 1, i));
+  const v = s.V[i], zone = v === null ? "бесконечная стенка" : (v > s.E[n] ? "запрещённая зона" : "разрешённая зона");
+  tip.show(px, map.Y(s.E[n]) - 4, `n = ${n + s.n0}, E = ${fmt(s.E[n], 3)}<br>${cur === "hydrogen" ? "r" : "x"} = ${fmt(xv, 2)}, V = ${v === null ? "∞" : fmt(v, 2)} · ${zone}`); });
+const endDrag = () => { if (drag){ drag = null; cv.style.cursor = "grab"; } }; cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", endDrag);
+cv.addEventListener("pointerleave", () => tip.hide());
+select("infinite");
+let thumbAcc = 0;
+animate(document.getElementById("atlas"), dt => { if (!G.play) return; G.t += dt; if (G.view === "3d" && !drag) G.yaw += dt * .12; if (G.view !== "prob") drawStage(); thumbAcc += dt; if (thumbAcc > 1 / 30){ thumbAcc = 0; drawThumbs(); } });
+window.addEventListener("resize", () => { drawStage(); drawThumbs(); });
+
+/* ================= spectral plates ================= */
+const DEF = ORDER.map(k => ({k, s: solveModel(k, defaults(k))}));
+(function(){
+  const cv = document.getElementById("barcode"), host = cv.parentElement, tip = addTip(host); let hits = [], hover = null;
+  const rows = DEF.map(({k, s}) => { const g1 = s.E[1] - s.E[0]; return {k, s, x: s.E.map(e => (e - s.E[0]) / g1), thr: isFinite(s.thr) ? (s.thr - s.E[0]) / g1 : null}; });
+  function draw(){
+    const w0 = host.clientWidth, labW = w0 < 520 ? 104 : 150, rowH = w0 < 520 ? 34 : 40, {g, w, h} = fit(cv, rowH * rows.length + 30);
+    const C = {ink: css("--ink"), ink2: css("--ink-2"), muted: css("--muted"), line: css("--line"), sunk: css("--sunk"), accent: css("--accent")};
+    const xmax = 9.5, X = v => labW + v / xmax * (w - labW - 8);
+    g.clearRect(0, 0, w, h); hits = [];
+    g.font = "11px " + NUMF(); g.fillStyle = C.muted; g.textAlign = "center";
+    for (let v = 0; v <= 9; v++){ g.strokeStyle = C.line; g.lineWidth = 1; g.beginPath(); g.moveTo(X(v), 4); g.lineTo(X(v), rowH * rows.length + 6); g.stroke(); g.fillText(v, X(v), rowH * rows.length + 20); }
+    rows.forEach((r, i) => {
+      const y = 6 + i * rowH, hh = rowH - 10, col = css(MODELS[r.k].color);
+      g.fillStyle = C.sunk; g.fillRect(X(0) - 4, y, w - X(0) - 4, hh);
+      if (r.thr !== null && r.thr < xmax){ const grad = g.createLinearGradient(X(r.thr), 0, w, 0); grad.addColorStop(0, alpha(col, .55)); grad.addColorStop(1, alpha(col, .12)); g.fillStyle = grad; g.fillRect(X(r.thr), y, w - 8 - X(r.thr), hh); }
+      r.x.forEach((v, n) => { if (v > xmax) return; const on = hover && hover.i === i && hover.n === n; g.strokeStyle = col; g.lineWidth = on ? 4 : 2.5; g.beginPath(); g.moveTo(X(v), y + 2); g.lineTo(X(v), y + hh - 2); g.stroke(); hits.push({i, n, x: X(v), y, hh}); });
+      g.fillStyle = r.k === "morse" || r.k === "hydrogen" ? C.ink : C.ink2; g.font = (r.k === "morse" || r.k === "hydrogen" ? "600 " : "") + (w0 < 520 ? "12px " : "13px ") + UIF(); g.textAlign = "left"; g.textBaseline = "middle";
+      g.fillText(w0 < 520 ? MODELS[r.k].short : MODELS[r.k].name, 0, y + hh / 2); g.textBaseline = "alphabetic";
+      if (r.thr !== null && r.thr < xmax){ g.fillStyle = css("--card"); g.font = "11px " + UIF(); }
+    });
+  }
+  cv.addEventListener("pointermove", e => { const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top; let best = null, bd = 8;
+    hits.forEach(t => { if (py >= t.y && py <= t.y + t.hh && Math.abs(px - t.x) < bd){ bd = Math.abs(px - t.x); best = t; } });
+    const ch = (best && (!hover || hover.i !== best.i || hover.n !== best.n)) || (!best && hover); hover = best; if (ch) draw();
+    if (best){ const row = rows[best.i], s = row.s; tip.show(best.x, best.y - 2, `${MODELS[row.k].name}, n = ${best.n + s.n0}<br>E = ${fmt(s.E[best.n], 4)}${best.n ? `, шаг ${fmt(s.E[best.n] - s.E[best.n-1], 3)}` : ""}`); } else tip.hide(); });
+  cv.addEventListener("pointerleave", () => { hover = null; tip.hide(); draw(); });
+  draw(); window.addEventListener("resize", draw);
+})();
+
+/* ================= tunnelling dot plot ================= */
+(function(){
+  const cv = document.getElementById("tunnelPlot"), host = cv.parentElement, tip = addTip(host); let hits = [];
+  function draw(){
+    const w0 = host.clientWidth, labW = w0 < 520 ? 104 : 150, rowH = 40, {g, w, h} = fit(cv, rowH * DEF.length + 30);
+    const C = {ink: css("--ink"), ink2: css("--ink-2"), muted: css("--muted"), line: css("--line"), card: css("--card")};
+    const xmax = 30, X = v => labW + v / xmax * (w - labW - 14);
+    g.clearRect(0, 0, w, h); hits = [];
+    g.font = "11px " + NUMF(); g.textAlign = "center"; g.fillStyle = C.muted;
+    for (let v = 0; v <= 30; v += 5){ g.strokeStyle = C.line; g.lineWidth = 1; g.beginPath(); g.moveTo(X(v), 4); g.lineTo(X(v), rowH * DEF.length + 4); g.stroke(); g.fillText(v + " %", X(v), rowH * DEF.length + 20); }
+    DEF.forEach(({k, s}, i) => {
+      const yc = 4 + i * rowH + rowH / 2, col = css(MODELS[k].color), P = s.pf.slice(0, 5).map(v => v * 100);
+      g.strokeStyle = alpha(col, .45); g.lineWidth = 2; g.beginPath(); g.moveTo(X(Math.min(...P)), yc); g.lineTo(X(Math.max(...P)), yc); g.stroke();
+      // spread dots that would overlap: alternate them above and below the row line
+      const order = P.map((v, n) => ({v, n})).sort((p1, p2) => p1.v - p2.v); let lastX = -1e9, flip = 0;
+      order.forEach(o => { const x = X(o.v); if (x - lastX < 15){ flip = flip ? 0 : 1; } else flip = 0; o.dy = flip ? (o.n % 2 ? -8 : 8) : 0; if (!flip) lastX = x; o.x = x; });
+      order.forEach(o => { const y = yc + o.dy; g.fillStyle = col; g.strokeStyle = C.card; g.lineWidth = 2; g.beginPath(); g.arc(o.x, y, 8, 0, 7); g.fill(); g.stroke();
+        g.fillStyle = "#fff"; g.font = "600 10px " + NUMF(); g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(o.n + 1, o.x, y + .5); g.textBaseline = "alphabetic"; hits.push({k, n: o.n, v: o.v, x: o.x, y}); });
+      g.fillStyle = k === "morse" || k === "hydrogen" ? C.ink : C.ink2; g.font = (k === "morse" || k === "hydrogen" ? "600 " : "") + (w0 < 520 ? "12px " : "13px ") + UIF(); g.textAlign = "left"; g.textBaseline = "middle";
+      g.fillText(w0 < 520 ? MODELS[k].short : MODELS[k].name, 0, yc); g.textBaseline = "alphabetic";
+    });
+  }
+  cv.addEventListener("pointermove", e => { const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top; let best = null, bd = 12;
+    hits.forEach(t => { const d = Math.hypot(t.x - px, t.y - py); if (d < bd){ bd = d; best = t; } });
+    if (best){ const s = DEF.find(d => d.k === best.k).s; tip.show(best.x, best.y - 10, `${MODELS[best.k].name}, n = ${best.n + s.n0}<br>P = ${fmt(best.v, 1)} %`); } else tip.hide(); });
+  cv.addEventListener("pointerleave", () => tip.hide());
+  draw(); window.addEventListener("resize", draw);
+})();
+
+/* ================= method ================= */
+(function(){
+  const cv = document.getElementById("m-cv"), cv2 = document.getElementById("m-conv"), sl = document.getElementById("m-N"), tip = addTip(cv2.parentElement);
+  let N = 8, cmap = null; const L = Math.PI, exact = 0.5;
+  const fdE = NN => { const h = L / (NN + 1); return 2 / (h * h) * Math.sin(Math.PI * h / (2 * L)) ** 2; };
+  function draw(){
+    const h = L / (N + 1), d = new Float64Array(N).fill(1 / (h * h)), r = eigTri(d, -.5 / (h * h), 1);
+    const W0 = cv.parentElement.clientWidth, {g, w, h: H} = fit(cv, Math.round(Math.max(170, Math.min(230, W0 * .5))));
+    const C = {ink2: css("--ink-2"), muted: css("--muted"), line: css("--line"), acc: css("--accent"), wall: css("--wall"), fl: css("--forbid-line"), card: css("--card")};
+    const m = {l: 18, r: 18, t: 10, b: 10}, X = x => m.l + x / L * (w - m.l - m.r), Y = y => H - m.b - y * (H - m.t - m.b) / 1.08;
+    g.clearRect(0, 0, w, H); g.fillStyle = C.wall; g.fillRect(0, 0, m.l, H); g.fillRect(w - m.r, 0, m.r, H); hatch(g, 0, 0, m.l, H, C.fl); hatch(g, w - m.r, 0, m.r, H, C.fl);
+    g.strokeStyle = C.line; g.lineWidth = 1; for (let j = 0; j <= N + 1; j++){ g.beginPath(); g.moveTo(X(j * h), m.t); g.lineTo(X(j * h), H - m.b); g.stroke(); }
+    g.strokeStyle = C.ink2; g.lineWidth = 2; g.beginPath(); for (let i = 0; i <= 200; i++){ const x = L * i / 200; i ? g.lineTo(X(x), Y(Math.sin(x))) : g.moveTo(X(x), Y(Math.sin(x))); } g.stroke();
+    const v = r.vecs[0]; let mx = 0; v.forEach(a => mx = Math.max(mx, Math.abs(a)));
+    for (let j = 0; j <= N + 1; j++){ const val = j === 0 || j === N + 1 ? 0 : v[j - 1] / mx; g.fillStyle = C.acc; g.strokeStyle = C.card; g.lineWidth = 2; g.beginPath(); g.arc(X(j * h), Y(val), 4.5, 0, 7); g.fill(); g.stroke(); }
+    const err = Math.abs(r.vals[0] - exact);
+    document.getElementById("m-read").textContent = `E₁ = ${fmt(r.vals[0], 4)} при точном 0,5000 — ошибка ${fmt(err / exact * 100, 2)} %.`;
+    drawConv(h, err);
+  }
+  function drawConv(hc, ec){
+    const W0 = cv2.parentElement.clientWidth, {g, w, h: H} = fit(cv2, Math.round(Math.max(170, Math.min(230, W0 * .5))));
+    const C = {muted: css("--muted"), line: css("--line"), s1: css("--s1"), acc: css("--accent"), card: css("--card")};
+    const m = {l: 40, r: 10, t: 8, b: 20}, lx = [Math.log10(.02), Math.log10(1.2)], ly = [-6, 0];
+    const X = h => m.l + (Math.log10(h) - lx[0]) / (lx[1] - lx[0]) * (w - m.l - m.r), Y = e => H - m.b - (Math.log10(e) - ly[0]) / (ly[1] - ly[0]) * (H - m.t - m.b);
+    g.clearRect(0, 0, w, H); g.font = "11px " + NUMF(); g.fillStyle = C.muted;
+    for (let e = ly[0]; e <= ly[1]; e += 2){ g.strokeStyle = C.line; g.lineWidth = 1; g.beginPath(); g.moveTo(m.l, Y(10 ** e)); g.lineTo(w - m.r, Y(10 ** e)); g.stroke(); g.textAlign = "right"; g.fillText("10" + sup(e), m.l - 6, Y(10 ** e) + 4); }
+    [.02, .1, .5].forEach(v => { g.textAlign = "center"; g.fillText("h=" + fmt(v, v < .1 ? 2 : 1), X(v), H - 4); });
+    const pts = []; for (let NN = 2; NN <= 160; NN++){ const h = L / (NN + 1); if (h < .02) break; pts.push([h, Math.abs(fdE(NN) - exact), NN]); }
+    const c = pts[pts.length - 1][1] / pts[pts.length - 1][0] ** 2;
+    g.strokeStyle = C.muted; g.globalAlpha = .55; g.lineWidth = 1.5; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(X(.02), Y(c * .0004)); g.lineTo(X(1.2), Y(c * 1.44)); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+    g.strokeStyle = C.s1; g.lineWidth = 2; g.beginPath(); pts.forEach((p, i) => { i ? g.lineTo(X(p[0]), Y(p[1])) : g.moveTo(X(p[0]), Y(p[1])); }); g.stroke();
+    g.fillStyle = C.acc; g.strokeStyle = C.card; g.lineWidth = 2; g.beginPath(); g.arc(X(hc), Y(ec), 6, 0, 7); g.fill(); g.stroke();
+    cmap = {X, Y, pts};
+  }
+  const nearest = px => { let b = null, bd = 1e9; cmap.pts.forEach(p => { const d = Math.abs(cmap.X(p[0]) - px); if (d < bd){ bd = d; b = p; } }); return b; };
+  cv2.addEventListener("pointermove", e => { if (!cmap) return; const r = cv2.getBoundingClientRect(), b = nearest(e.clientX - r.left); if (b) tip.show(cmap.X(b[0]), cmap.Y(b[1]) - 8, `N = ${b[2]}, h = ${fmt(b[0], 3)}<br>ошибка ${sci(b[1])}`); });
+  cv2.addEventListener("pointerleave", () => tip.hide());
+  cv2.addEventListener("click", e => { if (!cmap) return; const r = cv2.getBoundingClientRect(), b = nearest(e.clientX - r.left); if (b){ N = Math.max(3, Math.min(60, b[2])); sl.value = N; document.getElementById("m-No").textContent = N; draw(); } });
+  sl.addEventListener("input", () => { N = +sl.value; document.getElementById("m-No").textContent = N; draw(); });
+  draw(); window.addEventListener("resize", draw);
+})();
+
+/* ================= rail scrollspy ================= */
+(function(){
+  const links = [...document.querySelectorAll("#railnav a")]; if (!("IntersectionObserver" in window)) return;
+  const obs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting){ links.forEach(a => a.toggleAttribute("aria-current", a.getAttribute("href") === "#" + e.target.id)); links.forEach(a => { if (a.hasAttribute("aria-current")) a.setAttribute("aria-current", "true"); }); } }), {rootMargin: "-40% 0px -55% 0px"});
+  document.querySelectorAll("main section[id]").forEach(s => obs.observe(s));
+})();
+
+requestAnimationFrame(loop);
+})();
+</script>
+
+</body>
+</html>
